@@ -52,9 +52,8 @@ public class EnemyManager : MonoBehaviour {
 
     public Vector3 GenerateEnemySpawnPosition(Vector3 boardTarget)
     {
-        int dir = Mathf.RoundToInt(Random.Range(0, 3));
+        int dir = Random.Range(0, 3);
         //SpawnSide 0:Top 1:Right 2:Bottom 3:Left
-
         Vector3 spawnPos;
 
         //Later maybe spawn outside of sight

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Random = UnityEngine.Random;
 
 public class Enemy_MoveStraight : Enemy {
 
@@ -8,11 +9,8 @@ public class Enemy_MoveStraight : Enemy {
         base.Awake();
         instance = this;
         moveSpeed = 1f;
-    }
-
-    // Update is called once per frame
-    void Update() {
-
+        points = 1;
+        Random.seed = (int)System.DateTime.Now.Ticks;
     }
 
     public override void StartMove(Vector2 moveDir)
@@ -33,10 +31,5 @@ public class Enemy_MoveStraight : Enemy {
     protected void MoveStraight(Vector2 moveDir)
     {
         body.velocity = moveDir * moveSpeed;
-    }
-
-    void OnBecameInvisible()
-    {
-        Destroy(gameObject);
     }
 }

@@ -10,6 +10,9 @@ public class GameManager : MonoBehaviour {
     public EnemyManager enemyScript;
     public GameObject player;
 
+    private int score;
+    public Text scoreText;
+
     private int initialSquare = 3; //Change this later
 
     void Awake()
@@ -26,6 +29,7 @@ public class GameManager : MonoBehaviour {
         DontDestroyOnLoad(gameObject);
         boardScript = GetComponent<BoardManager>();
         enemyScript = GetComponent<EnemyManager>();
+        scoreText = GameObject.Find("ScoreText").GetComponent<Text>();
         InitGame();
     }
     
@@ -36,6 +40,8 @@ public class GameManager : MonoBehaviour {
 
     void InitGame()
     {
+        score = 0;
+        scoreText.text = "0";
         enemyScript.ClearEnemies();
         boardScript.SetupScene(initialSquare, initialSquare); //numInnerColumns, numOuterColumns
         enemyScript.StartSpawning();
@@ -43,7 +49,7 @@ public class GameManager : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-	
+
 	}
 
     public void GameOver()
@@ -69,5 +75,19 @@ public class GameManager : MonoBehaviour {
         Vector2 extents = GetCameraExtents();
         return new Vector3(Camera.main.transform.position.x - extents.x, Camera.main.transform.position.y - extents.y);
     }
+
+    public void AddPoints(int points) // change if you decide if certain enemies are worth more
+    {
+        score += points;
+        
+        scoreText.text = score.ToString();
+    }
+
+    public void ExtendBoardRandomDirection()
+    {
+        int dir = Random.Range(0, 3);
+        boardScript.ExtendBoard(dir);
+    }
+
 
 }

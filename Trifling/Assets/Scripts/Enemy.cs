@@ -9,6 +9,7 @@ public abstract class Enemy : MonoBehaviour {
     public Enemy instance;
     protected float moveSpeed;
     protected Rigidbody2D body;
+    protected int points;
 
     // Use this for initialization
     protected virtual void Awake () {
@@ -16,10 +17,21 @@ public abstract class Enemy : MonoBehaviour {
     }
 	
 	// Update is called once per frame
-	void Update () {
+	protected virtual void Update () {
 	    
 	}
 
     //Called by GameManager after instantiation is done
     public abstract void StartMove(Vector2 moveDir); // should be in the direction of the board maybe middle of the board - pos of enemy start
+
+    protected virtual void OnBecameInvisible()
+    {
+        this.Destroy();
+        Destroy(gameObject);
+    }
+
+    protected virtual void Destroy()
+    {
+        GameManager.instance.AddPoints(points);
+    }
 }
