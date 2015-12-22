@@ -150,45 +150,65 @@ public class BoardManager : MonoBehaviour {
         //dir: int 0-3 indicating direction to extend
         if (dir == 0) //Top
         {
-            //Make old CornerTiles sideWalls
-            outerWallsLeft.Add(cornerWalls.topLeft);
-            outerWallsRight.Add(cornerWalls.topRight);
-
-            //Make new CornerTiles
-            Vector3 topLeftPos = cornerWalls.topLeft.transform.position;
-            Vector3 topRightPos = cornerWalls.topRight.transform.position;
-            Vector3 diff = new Vector3(0, 0.32f, 0);
-            GameObject topLeftCorner = Instantiate(outerWallTile, topLeftPos + diff, Quaternion.identity) as GameObject;
-            GameObject topRightCorner = Instantiate(outerWallTile, topRightPos + diff, Quaternion.identity) as GameObject;
-            cornerWalls.topLeft = topLeftCorner;
-            cornerWalls.topRight = topRightCorner;
-
-            //Add new and replace the non-corner Top Outer Wall
-            for (int i = 1; i < columns - 1; i++)
-            {
-                Vector3 oldPos = outerWallsTop[i].transform.position;
-                gridPositions.Add(oldPos); //Will now be seen as a movable and targetable tile
-                Destroy(outerWallsTop[i].gameObject);
-                GameObject moveableTile = Instantiate(baseTile, oldPos, Quaternion.identity) as GameObject;
-                walkableTiles.Add(moveableTile);
-
-                GameObject instance = Instantiate(outerWallTile, oldPos + diff, Quaternion.identity) as GameObject;
-                outerWallsTop[i] = instance;
-            }
-
-            
+            ExtendWall(ref outerWallsTop, ref outerWallsLeft, ref outerWallsRight, ref cornerWalls.topLeft,
+                ref cornerWalls.topRight, Vector3.up * tileSize);            
         }
         else if (dir == 1) //Bot
         {
-
+            ExtendWall(ref outerWallsBot, ref outerWallsRight, ref outerWallsLeft, ref cornerWalls.botRight,
+                ref cornerWalls.botLeft, Vector3.down * tileSize);
         }
         else if (dir == 2) //Left
         {
-
+            ExtendWall(ref outerWallsLeft, ref outerWallsBot, ref outerWallsTop, ref cornerWalls.botLeft,
+                ref cornerWalls.topLeft, Vector3.left * tileSize);
         }
         else //Right
         {
+            ExtendWall(ref outerWallsRight, ref outerWallsTop, ref outerWallsBot, ref cornerWalls.topRight,
+                ref cornerWalls.botRight, Vector3.right * tileSize);
+        }
+    }
 
+    public void ExtendWall(ref List<GameObject> wallToExtend, ref List<GameObject> leftSideWall, ref List<GameObject> rightSidewall
+        , ref GameObject leftCorner, ref GameObject rightCorner, Vector3 diff)
+    {
+        ExtendCorners(ref leftSideWall, ref rightSidewall, ref leftCorner, ref rightCorner, ref diff);
+        ExtendCenterSideWall(ref wallToExtend, ref diff);
+    }
+
+    public void ExtendCorners(ref List<GameObject> leftSideWall, ref List<GameObject> rightSidewall
+        , ref GameObject leftCorner, ref GameObject rightCorner, ref Vector3 diff)
+    {
+        //Make old CornerTiles into sideWalls
+        leftSideWall.Add(leftCorner);
+        rightSidewall.Add(rightCorner);
+
+        //Make new CornerTiles
+        Vector3 leftPos = leftCorner.transform.position;
+        Vector3 rightPos = rightCorner.transform.position;
+
+        GameObject newLeftCorner = Instantiate(outerWallTile, leftPos + diff, Quaternion.identity) as GameObject;
+        GameObject newRightCorner = Instantiate(outerWallTile, rightPos + diff, Quaternion.identity) as GameObject;
+
+        leftCorner = newLeftCorner;
+        rightCorner = newRightCorner;
+
+    }
+
+    public void ExtendCenterSideWall(ref List<GameObject> wallToExtend, ref Vector3 diff)
+    {
+        //Add new and replace the non-corner Outer Wall
+        for (int i = 0; i < wallToExtend.Count; i++)
+        {
+            Vector3 oldPos = wallToExtend[i].transform.position;
+            gridPositions.Add(oldPos); //Will now be seen as a movable and targetable tile
+            Destroy(wallToExtend[i].gameObject);
+            GameObject moveableTile = Instantiate(baseTile, oldPos, Quaternion.identity) as GameObject;
+            walkableTiles.Add(moveableTile);
+
+            GameObject instance = Instantiate(outerWallTile, oldPos + diff, Quaternion.identity) as GameObject;
+            wallToExtend[i] = instance;
         }
     }
 

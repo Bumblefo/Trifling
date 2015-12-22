@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class GameManager : MonoBehaviour {
 
@@ -17,6 +18,7 @@ public class GameManager : MonoBehaviour {
 
     void Awake()
     {
+        Random.seed = (int)System.DateTime.Now.Ticks;
         if (instance == null)
         {
             instance = this;
@@ -45,6 +47,8 @@ public class GameManager : MonoBehaviour {
         enemyScript.ClearEnemies();
         boardScript.SetupScene(initialSquare, initialSquare); //numInnerColumns, numOuterColumns
         enemyScript.StartSpawning();
+
+        StartCoroutine("IncreaseBoardSize");
     }
 	
 	// Update is called once per frame
@@ -76,7 +80,7 @@ public class GameManager : MonoBehaviour {
         return new Vector3(Camera.main.transform.position.x - extents.x, Camera.main.transform.position.y - extents.y);
     }
 
-    public void AddPoints(int points) // change if you decide if certain enemies are worth more
+    public void AddPoints(int points)
     {
         score += points;
         
@@ -85,9 +89,16 @@ public class GameManager : MonoBehaviour {
 
     public void ExtendBoardRandomDirection()
     {
-        int dir = Random.Range(0, 3);
+        int dir = Random.Range(0, 4);
         boardScript.ExtendBoard(dir);
     }
 
-
+    private IEnumerator IncreaseBoardSize()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(3);
+            ExtendBoardRandomDirection();
+        }
+    }
 }
