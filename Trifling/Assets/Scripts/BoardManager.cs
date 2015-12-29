@@ -35,6 +35,7 @@ public class BoardManager : MonoBehaviour {
     //If you want an arraylist? do public GameObject[] floorTiles;
     public GameObject outerWallTile;
 
+    public Vector2 middle;
     private Transform boardHolder;
     private List<Vector3> gridPositions = new List<Vector3>(); // List of moveable grid positions
     private CornerWall cornerWalls;
@@ -64,10 +65,9 @@ public class BoardManager : MonoBehaviour {
     {
         //Sets up outer wall and floor
         boardHolder = new GameObject("Board").transform;
-
-        Vector2 middle = new Vector2(Mathf.Floor((float)columns / 2), Mathf.Floor((float)rows / 2));
-        Camera.main.transform.position = new Vector3(middle.x * 0.32f, middle.y * 0.32f, Camera.main.transform.position.z);
         
+        middle = new Vector2(Mathf.Floor((float)columns / 2), Mathf.Floor((float)rows / 2)); //Sets initial middle of board
+                        
         for (int x = 0; x < columns; x++)
         {
             for (int y = 0; y < rows; y++)
@@ -135,6 +135,15 @@ public class BoardManager : MonoBehaviour {
                 instance.transform.SetParent(boardHolder);
             }
         }
+
+        UpdateMiddleOfBoard();
+        GameManager.instance.SetCameraPosition(middle);
+    }
+
+    public void UpdateMiddleOfBoard()
+    {
+        Vector3 midpoint = (cornerWalls.topRight.transform.position + cornerWalls.botLeft.transform.position) / 2;
+        middle = new Vector2(midpoint.x, midpoint.y);
     }
 
     public void SetupScene(int numInnerCol, int numInnerRow)
@@ -145,29 +154,46 @@ public class BoardManager : MonoBehaviour {
         InitialiseList();
     }
 
+    private void DebugPrintCorners()
+    {
+        Debug.Log("TopLeft: " + cornerWalls.topLeft.transform.position.ToString());
+        Debug.Log("TopRight: " + cornerWalls.topRight.transform.position.ToString());
+        Debug.Log("botLeft: " + cornerWalls.botLeft.transform.position.ToString());
+        Debug.Log("botRight: " + cornerWalls.botRight.transform.position.ToString());
+    }
+
     public void ExtendBoard(int dir)
     {
         //dir: int 0-3 indicating direction to extend
         if (dir == 0) //Top
         {
             ExtendWall(ref outerWallsTop, ref outerWallsLeft, ref outerWallsRight, ref cornerWalls.topLeft,
-                ref cornerWalls.topRight, Vector3.up * tileSize);            
+                ref cornerWalls.topRight, Vector3.up * tileSize);
+            rows++;      
         }
         else if (dir == 1) //Bot
         {
             ExtendWall(ref outerWallsBot, ref outerWallsRight, ref outerWallsLeft, ref cornerWalls.botRight,
                 ref cornerWalls.botLeft, Vector3.down * tileSize);
+            rows++;
         }
         else if (dir == 2) //Left
         {
             ExtendWall(ref outerWallsLeft, ref outerWallsBot, ref outerWallsTop, ref cornerWalls.botLeft,
                 ref cornerWalls.topLeft, Vector3.left * tileSize);
+            columns++;
         }
         else //Right
         {
             ExtendWall(ref outerWallsRight, ref outerWallsTop, ref outerWallsBot, ref cornerWalls.topRight,
                 ref cornerWalls.botRight, Vector3.right * tileSize);
+            columns++;
         }
+        
+        UpdateMiddleOfBoard();
+        GameManager.instance.CenterCameraOnBoard();
+
+        //DebugPrintCorners();
     }
 
     public void ExtendWall(ref List<GameObject> wallToExtend, ref List<GameObject> leftSideWall, ref List<GameObject> rightSidewall
@@ -191,6 +217,9 @@ public class BoardManager : MonoBehaviour {
         GameObject newLeftCorner = Instantiate(outerWallTile, leftPos + diff, Quaternion.identity) as GameObject;
         GameObject newRightCorner = Instantiate(outerWallTile, rightPos + diff, Quaternion.identity) as GameObject;
 
+        newLeftCorner.transform.SetParent(boardHolder);
+        newRightCorner.transform.SetParent(boardHolder);
+
         leftCorner = newLeftCorner;
         rightCorner = newRightCorner;
 
@@ -207,8 +236,12 @@ public class BoardManager : MonoBehaviour {
             GameObject moveableTile = Instantiate(baseTile, oldPos, Quaternion.identity) as GameObject;
             walkableTiles.Add(moveableTile);
 
+            moveableTile.transform.SetParent(boardHolder);
+
             GameObject instance = Instantiate(outerWallTile, oldPos + diff, Quaternion.identity) as GameObject;
             wallToExtend[i] = instance;
+
+            instance.transform.SetParent(boardHolder);
         }
     }
 

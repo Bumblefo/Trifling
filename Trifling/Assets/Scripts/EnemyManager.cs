@@ -32,7 +32,7 @@ public class EnemyManager : MonoBehaviour {
         {
             yield return new WaitForSeconds(timeBetweenSpawn);
 
-            int enemyType = Mathf.RoundToInt(Random.Range(0, enemyPrefabs.Count - 1));
+            int enemyType = Random.Range(0, enemyPrefabs.Count);
             Vector3 boardTarget = boardScript.GetRandomGridPosition();
             Vector3 spawnPos = GenerateEnemySpawnPosition(boardTarget);
             Vector2 dirOfBoard = boardTarget - spawnPos;

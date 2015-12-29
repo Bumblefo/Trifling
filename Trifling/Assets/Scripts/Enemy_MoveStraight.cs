@@ -10,7 +10,6 @@ public class Enemy_MoveStraight : Enemy {
         instance = this;
         moveSpeed = 1f;
         points = 1;
-        Random.seed = (int)System.DateTime.Now.Ticks;
     }
 
     public override void StartMove(Vector2 moveDir)
