@@ -6,13 +6,16 @@ public class Player : TileMovingObject {
 
     private Animator animator;
     private Vector2 lastMove;
+    //public LayerMask enemyDamageLayer;
     //private bool justMoved;
+    public bool isDead;
 
     // Use this for initialization
     protected override void Start() {
         lastMove = new Vector2(0, 0);
         animator = GetComponent<Animator>();
         moveTime = 1f;
+        isDead = false;
         base.Start();
     }
 
@@ -20,7 +23,7 @@ public class Player : TileMovingObject {
     void Update() {
         int horizontal = 0;
         int vertical = 0;
-        
+
         horizontal = (int)Input.GetAxisRaw("Horizontal"); //Always either -1,0,1
         vertical = (int)Input.GetAxisRaw("Vertical");
 
@@ -30,7 +33,7 @@ public class Player : TileMovingObject {
         }*/
 
         //prevent moving horizontal and vertical at the same time. Favor horizontal movement over vertical movement
-        if (horizontal != 0) 
+        if (horizontal != 0)
         {
             vertical = 0;
         }
@@ -52,8 +55,6 @@ public class Player : TileMovingObject {
             }
         }
         */
-
-
     }
 
     protected override void AttemptMove<T>(int xDir, int yDir)
@@ -78,8 +79,12 @@ public class Player : TileMovingObject {
         }
     }
 
-    private void GameOver()
+    public void GameOver()
     {
-        GameManager.instance.GameOver();
+        if (!isDead)
+        {
+            isDead = true;
+            GameManager.instance.GameOver();
+        }        
     }
 }

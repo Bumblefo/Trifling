@@ -8,7 +8,7 @@ public class Enemy_MoveStraight : Enemy {
     protected override void Awake() {
         base.Awake();
         instance = this;
-        moveSpeed = 1f;
+        moveSpeed = 1.25f;
         points = 1;
     }
 
@@ -22,8 +22,7 @@ public class Enemy_MoveStraight : Enemy {
         {
             moveDir.x = 0;
         }
-
-        moveDir.Normalize();
+        
         MoveStraight(moveDir);
     }
 
@@ -31,4 +30,5 @@ public class Enemy_MoveStraight : Enemy {
     {
         body.velocity = moveDir * moveSpeed;
     }
+
 }

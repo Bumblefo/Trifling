@@ -5,11 +5,11 @@ public abstract class TileMovingObject : MonoBehaviour {
 
     public float moveTime; // time it takes to move in sec
     public LayerMask blockingLayer;
-    private const float blockSize = 0.32f;
+    protected const float blockSize = 0.32f;
 
-    private BoxCollider2D boxColl;
-    private Rigidbody2D body;
-    private float moveSpeed;
+    protected BoxCollider2D boxColl;
+    protected Rigidbody2D body;
+    protected float moveSpeed;
 
 	// Use this for initialization
 	protected virtual void Start () {

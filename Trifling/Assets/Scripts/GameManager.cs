@@ -10,14 +10,21 @@ public class GameManager : MonoBehaviour {
     public BoardManager boardScript;
     public EnemyManager enemyScript;
     public GameObject player;
+    public Player playerScript;
 
-    private int score;
+    public int difficulty;
+    public const int maxDifficulty = 16;
+    public bool gameOver;
+    private int totalScore;
+    private int pointsGainedSinceLastExtension;
+    private int pointsUntilExtension;
     public Text scoreText;
-
+    
     private int initialSquare = 3; //Change this later
     private float cameraMoveSpeed = 2f;
-
+    
     private bool isCameraMoving;
+    private GameObject mainCamera;
     private Rigidbody2D cameraBody;
 
     void Awake()
@@ -35,9 +42,12 @@ public class GameManager : MonoBehaviour {
         DontDestroyOnLoad(gameObject);
         boardScript = GetComponent<BoardManager>();
         enemyScript = GetComponent<EnemyManager>();
+        mainCamera = Camera.main.gameObject;
         scoreText = GameObject.Find("ScoreText").GetComponent<Text>();
         isCameraMoving = false;
         cameraBody = Camera.main.GetComponent<Rigidbody2D>();
+        pointsGainedSinceLastExtension = 0;
+        pointsUntilExtension = 20;
         InitGame();
     }
 
@@ -48,18 +58,13 @@ public class GameManager : MonoBehaviour {
 
     void InitGame()
     {
-        score = 0;
+        totalScore = 0;
         scoreText.text = "0";
+        gameOver = false;
         enemyScript.ClearEnemies();
-        boardScript.SetupScene(initialSquare, initialSquare); //numInnerColumns, numOuterColumns
+        boardScript.SetupScene(initialSquare, initialSquare); //numInnerColumns, numInnerRows
+        playerScript = player.GetComponent<Player>();
         enemyScript.StartSpawning();
-
-        StartCoroutine("IncreaseBoardSize");
-    }
-
-    // Update is called once per frame
-    void Update() {
-
     }
 
     public float GetTileSize()
@@ -72,9 +77,23 @@ public class GameManager : MonoBehaviour {
         return boardScript.middle;
     }
 
+    public void KillPlayer()
+    {
+        if (!playerScript.isDead)
+        {
+            playerScript.GameOver();
+        }        
+    }
+
     public void GameOver()
     {
         Debug.Log("GameOver");
+        if (!gameOver)
+        {
+            gameOver = true;
+            enemyScript.StopSpawning();
+            enemyScript.ClearEnemies();
+        }        
     }
 
     public float GetCameraVerticalExtent()
@@ -95,20 +114,72 @@ public class GameManager : MonoBehaviour {
     public Vector2 GetCameraTopRight()
     {
         Vector2 extents = GetCameraExtents();
-        return new Vector3(Camera.main.transform.position.x + extents.x, Camera.main.transform.position.y + extents.y);
+        return new Vector3(mainCamera.transform.position.x + extents.x, mainCamera.transform.position.y + extents.y);
     }
     
     public Vector2 GetCameraBottomLeft()
     {
         Vector2 extents = GetCameraExtents();
-        return new Vector3(Camera.main.transform.position.x - extents.x, Camera.main.transform.position.y - extents.y);
+        return new Vector3(mainCamera.transform.position.x - extents.x, mainCamera.transform.position.y - extents.y);
     }
 
     public void AddPoints(int points)
     {
-        score += points;
-        
-        scoreText.text = score.ToString();
+        totalScore += points;
+        pointsGainedSinceLastExtension += points;
+        if (scoreText != null)
+        {
+            scoreText.text = totalScore.ToString();
+        }
+
+        if (pointsGainedSinceLastExtension >= pointsUntilExtension)
+        {
+            //When it becomes a 5x5 square. Don't increase size but only increase Difficulty every 50 points
+            if (difficulty <= maxDifficulty)
+            {
+                IncreaseDifficulty();
+            }
+            pointsGainedSinceLastExtension -= pointsUntilExtension;
+
+            if (boardScript.columns < 7 || boardScript.rows < 7) //If not a 5x5 square yet
+            {
+                //dir 0:Top, 1:Bot, 2:Left, 3:Right
+                int dir = Random.Range(0, 2);
+                if (boardScript.lastAddedIsColumn) //Alternate between directions added
+                {
+                    dir += 2;
+                    boardScript.lastAddedIsColumn = false;
+                }
+                else
+                {
+                    boardScript.lastAddedIsColumn = true;
+                }
+                boardScript.ExtendBoard(dir);
+
+                Debug.Log("Extended at: " + totalScore + " with ptsToExt: " + pointsUntilExtension);
+
+                pointsUntilExtension += 20;
+                if (pointsUntilExtension == 100)
+                {
+                    pointsUntilExtension = 50;
+                }
+                //20-20
+                //40-60
+                //60-120
+                //80-200
+            }
+            else
+            {
+                Debug.Log("Difficulty: " + difficulty + " with ptsToExt: " + pointsUntilExtension);
+                pointsUntilExtension += 10;
+            }
+        }
+    }
+
+    private void IncreaseDifficulty()
+    {
+        difficulty++;
+        enemyScript.timeBetweenSpawn -= .05f;
     }
 
     public void ExtendBoardRandomDirection()
@@ -128,7 +199,7 @@ public class GameManager : MonoBehaviour {
 
     public void SetCameraPosition(Vector2 pos)
     {
-        Camera.main.transform.position = new Vector3(pos.x, pos.y, Camera.main.transform.position.z);
+        mainCamera.transform.position = new Vector3(pos.x, pos.y, mainCamera.transform.position.z);
     }
 
     public static Vector2 Vector3ToVector2(Vector3 vect)
@@ -165,16 +236,16 @@ public class GameManager : MonoBehaviour {
     private IEnumerator SmoothMoveCamera(Vector3 target)
     {
         isCameraMoving = true;
-        
-        float sqrRemainingDistance = (new Vector3(Camera.main.transform.position.x, Camera.main.transform.position.y, 0f) - target).sqrMagnitude;
+
+        float sqrRemainingDistance = (new Vector3(mainCamera.transform.position.x, mainCamera.transform.position.y, 0f) - target).sqrMagnitude;
 
         while (sqrRemainingDistance > float.Epsilon)
         {
-            Vector3 newPosition = Vector3.MoveTowards(Camera.main.transform.position,
-                new Vector3(target.x, target.y, Camera.main.transform.position.z), cameraMoveSpeed * Time.deltaTime);
+            Vector3 newPosition = Vector3.MoveTowards(mainCamera.transform.position,
+                new Vector3(target.x, target.y, mainCamera.transform.position.z), cameraMoveSpeed * Time.deltaTime);
             cameraBody.MovePosition(newPosition);
 
-            sqrRemainingDistance = (new Vector3(Camera.main.transform.position.x, Camera.main.transform.position.y, 0f) - target).sqrMagnitude;
+            sqrRemainingDistance = (new Vector3(mainCamera.transform.position.x, mainCamera.transform.position.y, 0f) - target).sqrMagnitude;
 
             yield return null;
         }

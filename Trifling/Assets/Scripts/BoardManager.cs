@@ -6,19 +6,6 @@ using Random = UnityEngine.Random;
 
 public class BoardManager : MonoBehaviour {
 
-    /*[Serializable]
-    public class Count
-    {
-        public int minimum;
-        public int maximum;
-
-        public Count(int min, int max)
-        {
-            minimum = min;
-            maximum = max;
-        }
-    }*/
-
     private struct CornerWall
     {
         public GameObject topLeft;
@@ -30,6 +17,9 @@ public class BoardManager : MonoBehaviour {
     public int columns;
     public int rows;
     public float tileSize = 0.32f;
+
+    public bool lastAddedIsColumn;
+    
     public GameObject playerPrefab;
     public GameObject baseTile;
     //If you want an arraylist? do public GameObject[] floorTiles;
@@ -63,6 +53,15 @@ public class BoardManager : MonoBehaviour {
 
     void BoardSetup()
     {
+        if (Random.Range(0, 2) == 0)
+        {
+            lastAddedIsColumn = true;
+        }
+        else
+        {
+            lastAddedIsColumn = false;
+        }
+
         //Sets up outer wall and floor
         boardHolder = new GameObject("Board").transform;
         
@@ -127,8 +126,8 @@ public class BoardManager : MonoBehaviour {
                     walkableTiles.Add(instance);
                     if (x == middle.x && y == middle.y)
                     {
-                        GameObject Player = Instantiate(playerPrefab, instance.transform.position, Quaternion.identity) as GameObject;
-                        GameManager.instance.player = Player;
+                        GameObject player = Instantiate(playerPrefab, instance.transform.position, Quaternion.identity) as GameObject;
+                        GameManager.instance.player = player;
                     }
                 }
 
